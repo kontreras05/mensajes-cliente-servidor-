@@ -4,7 +4,37 @@
 #include <string>
 
 // Declaramos la función que manejará a cada cliente. La definiremos más adelante.
-void manejarCliente(int clientID);
+void manejarCliente(int clientID) {
+    bool conectado = true;
+    while (conectado) {
+        // 1. Comprobar si hemos recibido un mensaje de este cliente.
+        // checkPendingMessages() nos dice si hay algo en el buffer de entrada.
+        if (checkPendingMessages(clientID)) {
+            std::vector<char> data;
+            // Obtenemos el mensaje con getMSG().
+            getMSG(clientID, data);
+
+            // Si el mensaje está vacío, puede que el cliente se haya desconectado de forma abrupta.
+            if (data.empty()) {
+                conectado = false;
+                continue;
+            }
+
+            // Convertimos el mensaje a un string para poder mostrarlo.
+            std::string msg(data.begin(), data.end());
+            std::cout << "Mensaje del cliente " << clientID << ": " << msg << std::endl;
+
+            // 2. Preparamos y enviamos una respuesta al cliente.
+            std::string response_str = "Servidor: mensaje recibido correctamente.";
+            std::vector<char> response(response_str.begin(), response_str.end());
+            sendMSG(clientID, response);
+        }
+    }
+
+    // 3. El bucle ha terminado, así que el cliente se ha desconectado.
+    std::cout << "Cliente " << clientID << " se ha desconectado." << std::endl;
+    closeConnection(clientID);
+}
 
 int main() {
     // 1. Inicializar el servidor en el puerto 5000
